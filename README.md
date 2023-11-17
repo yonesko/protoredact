@@ -1,5 +1,7 @@
 Lib for fields redaction (hiding sensitive fields) base on filed options.
 
+### Base case
+
 Define field option:
 
 ```protobuf
@@ -38,4 +40,24 @@ fmt.Println("cloned:", string(bytesCloned))
 }
 //original: {"fieldInt64":515, "fieldStringSensitive":"my_password"}
 //cloned: {"fieldInt64":515}
+```
+
+### Map case
+You can specify which keys of map to hide:
+```protobuf
+syntax = "proto3";
+package testproto;
+import "google/protobuf/descriptor.proto";
+
+message SensitiveData {
+  repeated string mapKeysToRedact = 1;
+}
+
+extend google.protobuf.FieldOptions {
+  SensitiveData sensitive_data = 1200;
+}
+
+message WithAllFieldTypes {
+  map<int64, string> mapWithSensitiveKeyIntKey = 1[(sensitive_data) = {mapKeysToRedact:["password"]}];
+}
 ```
