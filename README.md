@@ -1,3 +1,5 @@
+Lib for fields redaction (hiding sensitive fields) base on filed options.
+
 Define field option:
 
 ```protobuf
@@ -21,17 +23,19 @@ message WithAllFieldTypes {
   string fieldStringSensitive = 2 [(sensitive_data) = {}];
 }
 ```
+
 Call Redact on your message:
+
 ```go
 func Test(t *testing.T) {
-    msg := &testproto.WithAllFieldTypes{FieldInt64: 515, FieldStringSensitive: "my_password"}
-    msgCloned := proto.Clone(msg)
-    _ = Redact(msgCloned, testproto.E_SensitiveData)
-    bytesOriginal, _ := json.Marshal(msg)
-    bytesCloned, _ := json.Marshal(msgCloned)
-    fmt.Println("original:", string(bytesOriginal))
-    fmt.Println("cloned:", string(bytesCloned))
+msg := &testproto.WithAllFieldTypes{FieldInt64: 515, FieldStringSensitive: "my_password"}
+msgCloned := proto.Clone(msg)
+_ = Redact(msgCloned, testproto.E_SensitiveData)
+bytesOriginal, _ := json.Marshal(msg)
+bytesCloned, _ := json.Marshal(msgCloned)
+fmt.Println("original:", string(bytesOriginal))
+fmt.Println("cloned:", string(bytesCloned))
 }
-original: {"fieldInt64":515,"fieldStringSensitive":"my_password"}
-cloned: {"fieldInt64":515}
+//original: {"fieldInt64":515, "fieldStringSensitive":"my_password"}
+//cloned: {"fieldInt64":515}
 ```
