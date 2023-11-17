@@ -12,8 +12,8 @@ message WithAllFieldTypes {
     int64 fieldInt64 = 1;
     string fieldStringSensitive = 2 [(sensitive_data) = {}];
     map<string, Internal> sensitiveMap = 45[(sensitive_data) = {}];
-    map<string, Internal> mapWithSensitiveKey = 445[(sensitive_data) = {mapKeysToRedact:["hide_this_key"]}];
-    map<int64, Internal> mapWithSensitiveKeyIntKey = 63[(sensitive_data) = {mapKeysToRedact:["87654"]}];
+    map<string, Internal> mapWithSensitiveKey = 445[(sensitive_data) = {map_keys_to_redact:["hide_this_key"]}];
+    map<int64, Internal> mapWithSensitiveKeyIntKey = 63[(sensitive_data) = {map_keys_to_redact:["87654"]}];
     Internal recursive = 23;
     Internal recursiveSensitive = 21[(sensitive_data) = {}];
   }
@@ -30,7 +30,7 @@ message WithAllFieldTypes {
 
 message SensitiveData {
   //if set, hides only specified keys, otherwise the whole field
-  repeated string mapKeysToRedact = 1;
+  repeated string map_keys_to_redact = 1;
 }
 
 extend google.protobuf.FieldOptions {
