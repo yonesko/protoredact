@@ -1,0 +1,40 @@
+syntax = "proto3";
+package testproto;
+import "google/protobuf/descriptor.proto";
+
+enum Enum1 {
+  UNSPECIFIED = 0;
+  ENUM_1_VAL_1 = 1;
+}
+
+message WithAllFieldTypes {
+  message Internal {
+    int64 fieldInt64 = 1;
+    string fieldStringSensitive = 2 [(sensitive_data) = {}];
+    map<string, Internal> sensitiveMap = 45[(sensitive_data) = {}];
+    map<string, Internal> mapWithSensitiveKey = 445[(sensitive_data) = {mapKeysToRedact:["hide_this_key"]}];
+    map<int64, Internal> mapWithSensitiveKeyIntKey = 63[(sensitive_data) = {mapKeysToRedact:["87654"]}];
+    Internal recursive = 23;
+    Internal recursiveSensitive = 21[(sensitive_data) = {}];
+  }
+  int64 fieldInt64 = 1;
+  optional int64 fieldInt64Optional = 5;
+  string fieldStringSensitive = 2 [(sensitive_data) = {}];
+  bool fieldBool = 3;
+  repeated  Internal messageList = 4;
+  repeated  Internal messageListSensitive = 43 [(sensitive_data) = {}];
+  Enum1 enum1 = 6;
+  Enum1 enum1Sensitive = 63 [(sensitive_data) = {}];
+  map<string, Internal> mapField = 45;
+}
+
+message SensitiveData {
+  //if set, hides only specified keys, otherwise the whole field
+  repeated string mapKeysToRedact = 1;
+}
+
+extend google.protobuf.FieldOptions {
+  SensitiveData sensitive_data = 1200;
+}
+
+
