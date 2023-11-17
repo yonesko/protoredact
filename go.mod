@@ -1,9 +1,9 @@
 module github.com/yonesko/protoredact
 
-go 1.21.3
+go 1.21
 
 require (
-	github.com/golang/protobuf v1.5.3
+	github.com/golang/protobuf v1.5.0
 	github.com/samber/lo v1.38.1
 	github.com/stretchr/testify v1.8.4
 	google.golang.org/protobuf v1.31.0
