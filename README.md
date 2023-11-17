@@ -1,5 +1,9 @@
 Lib for fields redaction (hiding sensitive fields) base on filed options.
 
+```bash
+go get github.com/yonesko/protoredact
+```
+
 ### Base case
 
 Define field option:
