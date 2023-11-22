@@ -44,6 +44,22 @@ func TestRedactProto(t *testing.T) {
 			want: &testproto.WithAllFieldTypes{FieldInt64: 418}, wantErr: false,
 		},
 		{
+			name: "oneof",
+			args: args{
+				message: &testproto.WithAllFieldTypes{PaymentToken: &testproto.WithAllFieldTypes_Token{Token: "earnest"}},
+			},
+			want:    &testproto.WithAllFieldTypes{PaymentToken: &testproto.WithAllFieldTypes_Token{Token: "earnest"}},
+			wantErr: false,
+		},
+		{
+			name: "oneof hide",
+			args: args{
+				message: &testproto.WithAllFieldTypes{PaymentToken: &testproto.WithAllFieldTypes_Cryptogram{Cryptogram: "earnest"}},
+			},
+			want:    &testproto.WithAllFieldTypes{},
+			wantErr: false,
+		},
+		{
 			name: "complex",
 			args: args{
 				message: &testproto.WithAllFieldTypes{

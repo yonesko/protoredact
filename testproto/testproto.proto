@@ -17,6 +17,10 @@ message WithAllFieldTypes {
     Internal recursive = 23;
     Internal recursiveSensitive = 21[(sensitive_data) = {}];
   }
+  oneof payment_token {
+    string token = 52;
+    string cryptogram = 16  [(sensitive_data) = {}];
+  }
   int64 fieldInt64 = 1;
   optional int64 fieldInt64Optional = 5;
   string fieldStringSensitive = 2 [(sensitive_data) = {}];
