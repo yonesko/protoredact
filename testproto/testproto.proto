@@ -11,6 +11,7 @@ message WithAllFieldTypes {
   message Internal {
     int64 fieldInt64 = 1;
     string fieldStringSensitive = 2 [(sensitive_data) = {}];
+    int64 fieldIntSensitive = 26 [(sensitive_data) = {}];
     map<string, Internal> sensitiveMap = 45[(sensitive_data) = {}];
     map<string, Internal> mapWithSensitiveKey = 445[(sensitive_data) = {map_keys_to_redact:["hide_this_key"]}];
     map<int64, Internal> mapWithSensitiveKeyIntKey = 63[(sensitive_data) = {map_keys_to_redact:["87654"]}];

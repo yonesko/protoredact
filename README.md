@@ -46,8 +46,12 @@ fmt.Println("cloned:", string(bytesCloned))
 //cloned: {"fieldInt64":515}
 ```
 
+Sensitive keys will be empty
+
 ### Map case
+
 You can specify which keys of map to hide:
+
 ```protobuf
 syntax = "proto3";
 package testproto;
@@ -65,3 +69,7 @@ message WithAllFieldTypes {
   map<int64, string> mapWithSensitiveKeyIntKey = 1[(sensitive_data) = {mapKeysToRedact:["password"]}];
 }
 ```
+
+### Set Value Case
+
+You can use `redactingHandler` to specify what you want to do with sensitive field
