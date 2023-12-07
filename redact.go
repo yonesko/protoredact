@@ -12,7 +12,6 @@ import (
 
 var StdRedactor = Redactor{
 	redactingHandler: func(parent protoreflect.Value, fd protoreflect.FieldDescriptor) error {
-		//parent.Message().Set(fd, protoreflect.ValueOfString("REDACTED"))
 		parent.Message().Clear(fd)
 		return nil
 	},
@@ -23,7 +22,7 @@ type Redactor struct {
 }
 
 func (r Redactor) Redact(msg proto.Message, sensitiveFieldAnnotation *protoimpl.ExtensionInfo) error {
-	err := protorange.Range(msg.ProtoReflect(), func(p protopath.Values) error {
+	return protorange.Range(msg.ProtoReflect(), func(p protopath.Values) error {
 		fd := p.Path.Index(-1).FieldDescriptor()
 		if isFieldSensetive(fd, p.Index(-1).Value, sensitiveFieldAnnotation) {
 			parent := p.Index(-2)
@@ -37,10 +36,6 @@ func (r Redactor) Redact(msg proto.Message, sensitiveFieldAnnotation *protoimpl.
 
 		return nil
 	})
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func Redact(msg proto.Message, sensitiveFieldAnnotation *protoimpl.ExtensionInfo) error {
