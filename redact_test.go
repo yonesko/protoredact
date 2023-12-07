@@ -1,11 +1,7 @@
 package protoredact
 
 import (
-	"crypto/aes"
-	"crypto/cipher"
-	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/yonesko/protoredact/testproto/go/testproto"
@@ -164,56 +160,4 @@ func Benchmark(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_ = Redact(msg, testproto.E_SensitiveData)
 	}
-}
-
-func encrypt(plaintext string) string {
-	aes, err := aes.NewCipher([]byte("N1PCdw3M2B1TfJhoaY2mL736p2vCUc47"))
-	if err != nil {
-		panic(err)
-	}
-
-	gcm := lo.Must(cipher.NewGCM(aes))
-	nonce := make([]byte, gcm.NonceSize())
-	//_, _ = io.ReadFull(rand.Reader, nonce)
-
-	return string(gcm.Seal(nonce, nonce, []byte(plaintext), nil))
-}
-
-func Test_wfef(t *testing.T) {
-	// This will successfully encrypt.
-
-	// This will cause an error since the
-	// plaintext is less than 16 bytes.
-	ciphertext := encrypt("jhytgfl,ikmujnyhbtgrvfecdrgthyjukil,o.,hbgfvcdexwefrgvthyip8;nrytbevwfcdfr")
-	fmt.Printf("Ciphertext: %s \n", base64.StdEncoding.EncodeToString([]byte(ciphertext)))
-
-	s := decrypt(ciphertext)
-
-	fmt.Printf("s='%+v'\n", s)
-}
-
-//000000000000000000000000eadc2924663fdbac41733228a465211d87a2ea1d126eb6bc1aaa94117503e4ba78c6842f18727f0bd0acff5ac6f905d95351
-
-func decrypt(ciphertext string) string {
-	aes, err := aes.NewCipher([]byte("N1PCdw3M2B1TfJhoaY2mL736p2vCUc47"))
-	if err != nil {
-		panic(err)
-	}
-
-	gcm, err := cipher.NewGCM(aes)
-	if err != nil {
-		panic(err)
-	}
-
-	// Since we know the ciphertext is actually nonce+ciphertext
-	// And len(nonce) == NonceSize(). We can separate the two.
-	nonceSize := gcm.NonceSize()
-	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
-
-	plaintext, err := gcm.Open(nil, []byte(nonce), []byte(ciphertext), nil)
-	if err != nil {
-		panic(err)
-	}
-
-	return string(plaintext)
 }
