@@ -11,14 +11,14 @@ import (
 )
 
 var StdRedactor = Redactor{
-	redactingHandler: func(parent protoreflect.Value, fd protoreflect.FieldDescriptor) error {
+	RedactingHandler: func(parent protoreflect.Value, fd protoreflect.FieldDescriptor) error {
 		parent.Message().Clear(fd)
 		return nil
 	},
 }
 
 type Redactor struct {
-	redactingHandler func(parent protoreflect.Value, field protoreflect.FieldDescriptor) error
+	RedactingHandler func(parent protoreflect.Value, field protoreflect.FieldDescriptor) error
 }
 
 func (r Redactor) Redact(msg proto.Message, sensitiveFieldAnnotation *protoimpl.ExtensionInfo) error {
@@ -27,7 +27,7 @@ func (r Redactor) Redact(msg proto.Message, sensitiveFieldAnnotation *protoimpl.
 		if isFieldSensetive(fd, p.Index(-1).Value, sensitiveFieldAnnotation) {
 			parent := p.Index(-2)
 			if parent.Value.IsValid() {
-				err := r.redactingHandler(parent.Value, fd)
+				err := r.RedactingHandler(parent.Value, fd)
 				if err != nil {
 					return err
 				}
