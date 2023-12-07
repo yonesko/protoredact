@@ -9,21 +9,25 @@ import (
 	"google.golang.org/protobuf/types/descriptorpb"
 )
 
-var StdRedactor = Redactor{
-	RedactingHandler: func(parent protoreflect.Value, fd protoreflect.FieldDescriptor) error {
+var (
+	clearFunc = func(parent protoreflect.Value, fd protoreflect.FieldDescriptor) error {
 		parent.Message().Clear(fd)
 		return nil
-	},
-}
+	}
+)
 
 type Redactor struct {
-	RedactingHandler func(parent protoreflect.Value, field protoreflect.FieldDescriptor) error
+	SensitiveFieldAnnotation *protoimpl.ExtensionInfo
+	RedactingHandler         func(parent protoreflect.Value, field protoreflect.FieldDescriptor) error
 }
 
-func (r Redactor) Redact(msg proto.Message, sensitiveFieldAnnotation *protoimpl.ExtensionInfo) error {
+func (r Redactor) Redact(msg proto.Message) error {
+	if r.SensitiveFieldAnnotation == nil || r.RedactingHandler == nil {
+		return nil
+	}
 	return protorange.Range(msg.ProtoReflect(), func(p protopath.Values) error {
 		fd := p.Path.Index(-1).FieldDescriptor()
-		if isFieldSensetive(fd, p.Index(-1).Value, sensitiveFieldAnnotation) {
+		if isFieldSensetive(fd, p.Index(-1).Value, r.SensitiveFieldAnnotation) {
 			parent := p.Index(-2)
 			if parent.Value.IsValid() {
 				err := r.RedactingHandler(parent.Value, fd)
@@ -38,7 +42,7 @@ func (r Redactor) Redact(msg proto.Message, sensitiveFieldAnnotation *protoimpl.
 }
 
 func Redact(msg proto.Message, sensitiveFieldAnnotation *protoimpl.ExtensionInfo) error {
-	return StdRedactor.Redact(msg, sensitiveFieldAnnotation)
+	return Redactor{RedactingHandler: clearFunc, SensitiveFieldAnnotation: sensitiveFieldAnnotation}.Redact(msg)
 }
 
 func isFieldSensetive(fieldDescriptor protoreflect.FieldDescriptor, value protoreflect.Value, sensitiveFieldAnnotation *protoimpl.ExtensionInfo) bool {

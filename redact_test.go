@@ -11,10 +11,13 @@ import (
 
 func TestRedactProto_Clear(t *testing.T) {
 	t.Parallel()
-	redactor := Redactor{RedactingHandler: func(parent protoreflect.Value, fd protoreflect.FieldDescriptor) error {
-		parent.Message().Clear(fd)
-		return nil
-	}}
+	redactor := Redactor{
+		RedactingHandler: func(parent protoreflect.Value, fd protoreflect.FieldDescriptor) error {
+			parent.Message().Clear(fd)
+			return nil
+		},
+		SensitiveFieldAnnotation: testproto.E_SensitiveData,
+	}
 
 	type args struct {
 		message proto.Message
@@ -130,7 +133,7 @@ func TestRedactProto_Clear(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := redactor.Redact(tt.args.message, testproto.E_SensitiveData)
+			err := redactor.Redact(tt.args.message)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("SensetiveFields() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -142,14 +145,17 @@ func TestRedactProto_Clear(t *testing.T) {
 }
 func TestRedactProto_SetStringClearOther(t *testing.T) {
 	t.Parallel()
-	redactor := Redactor{RedactingHandler: func(parent protoreflect.Value, field protoreflect.FieldDescriptor) error {
-		if parent.IsValid() && field.Kind() == protoreflect.StringKind {
-			parent.Message().Set(field, protoreflect.ValueOfString("REDACTED"))
-		} else {
-			parent.Message().Clear(field)
-		}
-		return nil
-	}}
+	redactor := Redactor{
+		RedactingHandler: func(parent protoreflect.Value, field protoreflect.FieldDescriptor) error {
+			if parent.IsValid() && field.Kind() == protoreflect.StringKind {
+				parent.Message().Set(field, protoreflect.ValueOfString("REDACTED"))
+			} else {
+				parent.Message().Clear(field)
+			}
+			return nil
+		},
+		SensitiveFieldAnnotation: testproto.E_SensitiveData,
+	}
 	type args struct {
 		message proto.Message
 	}
@@ -226,7 +232,7 @@ func TestRedactProto_SetStringClearOther(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := redactor.Redact(tt.args.message, testproto.E_SensitiveData)
+			err := redactor.Redact(tt.args.message)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("SensetiveFields() error = %v, wantErr %v", err, tt.wantErr)
 				return
