@@ -5,11 +5,17 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/yonesko/protoredact/testproto/go/testproto"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"testing"
 )
 
-func TestRedactProto(t *testing.T) {
+func TestRedactProto_Clear(t *testing.T) {
 	t.Parallel()
+	redactor := Redactor{RedactingHandler: func(parent protoreflect.Value, fd protoreflect.FieldDescriptor) error {
+		parent.Message().Clear(fd)
+		return nil
+	}}
+
 	type args struct {
 		message proto.Message
 	}
@@ -124,7 +130,103 @@ func TestRedactProto(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := Redact(tt.args.message, testproto.E_SensitiveData)
+			err := redactor.Redact(tt.args.message, testproto.E_SensitiveData)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("SensetiveFields() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			assert.True(t, proto.Equal(tt.want, tt.args.message))
+			assert.Equal(t, string(must(json.Marshal(tt.want))), string(must(json.Marshal(tt.args.message))))
+		})
+	}
+}
+func TestRedactProto_SetStringClearOther(t *testing.T) {
+	t.Parallel()
+	redactor := Redactor{RedactingHandler: func(parent protoreflect.Value, field protoreflect.FieldDescriptor) error {
+		if parent.IsValid() && field.Kind() == protoreflect.StringKind {
+			parent.Message().Set(field, protoreflect.ValueOfString("REDACTED"))
+		} else {
+			parent.Message().Clear(field)
+		}
+		return nil
+	}}
+	type args struct {
+		message proto.Message
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    proto.Message
+		wantErr bool
+	}{
+		{
+			name: "complex",
+			args: args{
+				message: &testproto.WithAllFieldTypes{
+					MessageListSensitive: []*testproto.WithAllFieldTypes_Internal{{FieldInt64: 915}, {FieldInt64: 843}},
+					MessageList: []*testproto.WithAllFieldTypes_Internal{
+						{FieldInt64: 145, FieldStringSensitive: "progress"},
+						{FieldInt64: 309},
+						{SensitiveMap: map[string]*testproto.WithAllFieldTypes_Internal{"surround": {}}},
+						{MapWithSensitiveKey: map[string]*testproto.WithAllFieldTypes_Internal{
+							"detail":        {FieldInt64: 948, FieldStringSensitive: "Conubiafeugiat"},
+							"hide_this_key": {FieldInt64: 999},
+						}},
+						{MapWithSensitiveKeyIntKey: map[int64]*testproto.WithAllFieldTypes_Internal{87654: {FieldInt64: 948}, 642: {FieldInt64: 651}}},
+						{},
+						{
+							Recursive: &testproto.WithAllFieldTypes_Internal{
+								Recursive: &testproto.WithAllFieldTypes_Internal{
+									FieldInt64:           530,
+									FieldStringSensitive: "improve",
+									FieldIntSensitive:    434,
+								},
+								RecursiveSensitive: &testproto.WithAllFieldTypes_Internal{
+									FieldInt64:           732,
+									FieldStringSensitive: "walk",
+								},
+							},
+							RecursiveSensitive: &testproto.WithAllFieldTypes_Internal{
+								Recursive: &testproto.WithAllFieldTypes_Internal{
+									FieldInt64:           813,
+									FieldStringSensitive: "pardon",
+								},
+								RecursiveSensitive: &testproto.WithAllFieldTypes_Internal{
+									FieldInt64:           632,
+									FieldStringSensitive: "wild",
+								},
+							},
+						},
+					},
+				},
+			},
+			want: &testproto.WithAllFieldTypes{
+				MessageList: []*testproto.WithAllFieldTypes_Internal{
+					{FieldInt64: 145, FieldStringSensitive: "REDACTED"},
+					{FieldInt64: 309},
+					{},
+					{MapWithSensitiveKey: map[string]*testproto.WithAllFieldTypes_Internal{
+						"detail":        {FieldInt64: 948, FieldStringSensitive: "REDACTED"},
+						"hide_this_key": {},
+					}},
+					{MapWithSensitiveKeyIntKey: map[int64]*testproto.WithAllFieldTypes_Internal{87654: {}, 642: {FieldInt64: 651}}},
+					{},
+					{
+						Recursive: &testproto.WithAllFieldTypes_Internal{
+							Recursive: &testproto.WithAllFieldTypes_Internal{
+								FieldInt64:           530,
+								FieldStringSensitive: "REDACTED",
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := redactor.Redact(tt.args.message, testproto.E_SensitiveData)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("SensetiveFields() error = %v, wantErr %v", err, tt.wantErr)
 				return
