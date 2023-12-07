@@ -2,7 +2,6 @@ package protoredact
 
 import (
 	"encoding/json"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/yonesko/protoredact/testproto/go/testproto"
 	"google.golang.org/protobuf/proto"
@@ -131,7 +130,7 @@ func TestRedactProto(t *testing.T) {
 				return
 			}
 			assert.True(t, proto.Equal(tt.want, tt.args.message))
-			assert.Equal(t, string(lo.Must(json.Marshal(tt.want))), string(lo.Must(json.Marshal(tt.args.message))))
+			assert.Equal(t, string(must(json.Marshal(tt.want))), string(must(json.Marshal(tt.args.message))))
 		})
 	}
 }
@@ -160,4 +159,11 @@ func Benchmark(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_ = Redact(msg, testproto.E_SensitiveData)
 	}
+}
+
+func must[T any](val T, err error) T {
+	if err != nil {
+		panic(err)
+	}
+	return val
 }

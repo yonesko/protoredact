@@ -1,7 +1,6 @@
 package protoredact
 
 import (
-	"github.com/samber/lo"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protopath"
 	"google.golang.org/protobuf/reflect/protorange"
@@ -72,7 +71,7 @@ func handleMapType(fd protoreflect.FieldDescriptor, value protoreflect.Value, op
 	if !ok {
 		return false
 	}
-	keysToHide := lo.SliceToMap(ext.GetMapKeysToRedact(), func(item string) (string, bool) {
+	keysToHide := associate(ext.GetMapKeysToRedact(), func(item string) (string, bool) {
 		return item, true
 	})
 	if len(keysToHide) == 0 {
@@ -87,4 +86,15 @@ func handleMapType(fd protoreflect.FieldDescriptor, value protoreflect.Value, op
 		return true
 	})
 	return false
+}
+
+func associate[T any, K comparable, V any](collection []T, transform func(item T) (K, V)) map[K]V {
+	result := make(map[K]V, len(collection))
+
+	for _, t := range collection {
+		k, v := transform(t)
+		result[k] = v
+	}
+
+	return result
 }
