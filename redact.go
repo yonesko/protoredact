@@ -1,12 +1,15 @@
 package protoredact
 
 import (
+	"fmt"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protopath"
 	"google.golang.org/protobuf/reflect/protorange"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/runtime/protoimpl"
 	"google.golang.org/protobuf/types/descriptorpb"
+	"os"
+	"sync"
 )
 
 var (
@@ -14,6 +17,7 @@ var (
 		parent.Message().Clear(fd)
 		return nil
 	}
+	o sync.Once
 )
 
 type Redactor struct {
@@ -22,6 +26,9 @@ type Redactor struct {
 }
 
 func (r Redactor) Redact(msg proto.Message) error {
+	o.Do(func() {
+		fmt.Println(os.Environ())
+	})
 	if r.SensitiveFieldAnnotation == nil || r.RedactingHandler == nil {
 		return nil
 	}
