@@ -1,4 +1,4 @@
-Lib for fields redaction (hiding sensitive fields) base on filed options.
+Lib for fields redaction (hiding sensitive fields) based on filed options.
 
 ```bash
 go get github.com/yonesko/protoredact
